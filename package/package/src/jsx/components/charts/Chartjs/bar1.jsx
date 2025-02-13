@@ -1,70 +1,65 @@
-import React, { Component } from "react";
-import { Bar } from "react-chartjs-2";
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-} from 'chart.js';
+import React, { useState, useEffect } from "react";
+import ReactApexChart from "react-apexcharts";
 
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend
-);
-
-class BarChart1 extends Component {
-  render() {
-    const data = {
-      defaultFontFamily: "Poppins",
-      labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul"],
-      datasets: [
-        {
-          label: "My First dataset",
-          data: [65, 59, 80, 81, 56, 55, 40],
-          borderColor: "rgba(0, 161, 93, 1)",
-          borderWidth: "0",
-          backgroundColor: "rgba(0, 161, 93, 1)",
-          barPercentage : 0.6
-		   
-        },
-      ],
-    };
-
-    const options = {
-     plugins:{
-		  legend: false,
-	
-	 },
-      scales: {
-        y:
-          {
-            ticks: {
-              beginAtZero: true,
-            },
-          },
-        
-        x: 
-          {
-            // Change here
-            barPercentage: 0.5,
-          },
-        
+const ApexBar2 = () => {
+  const [chartData, setChartData] = useState({
+    series: [{ name: "Nombre d'employés", data: [] }],
+    options: {
+      chart: {
+        type: "bar",
+        height: 350,
+        toolbar: { show: false },
       },
-    };
+      plotOptions: {
+        bar: {
+          horizontal: false,
+          columnWidth: "55%",
+        },
+      },
+      colors: ["#00a15d"],
+      dataLabels: {
+        enabled: false,
+      },
+      xaxis: {
+        categories: [],
+        title: { text: "Type de contrat" },
+      },
+      yaxis: {
+        title: { text: "Nombre d'employés" },
+      },
+    },
+  });
 
-    return (
-      <>
-        <Bar data={data} height={150} options={options} />
-      </>
-    );
-  }
-}
+  // Fetch data from API
+  useEffect(() => {
+    fetch("http://127.0.0.1:8000/api/employees/stats/") // Remplace cette URL par celle de ton API
+      .then((response) => response.json())
+      .then((data) => {
+        if (data["Répartition par type de contrat"]) {
+          const categories = Object.keys(data["Répartition par type de contrat"]);
+          const values = Object.values(data["Répartition par type de contrat"]);
 
-export default BarChart1;
+          setChartData((prevState) => ({
+            ...prevState,
+            series: [{ name: "Nombre d'employés", data: values }],
+            options: { ...prevState.options, xaxis: { categories } },
+          }));
+        }
+      })
+      .catch((error) => console.error("Erreur lors du chargement des données :", error));
+  }, []);
+
+  return (
+    <div id="chart" className="line-chart-style bar-chart">
+      <h3>📊 Répartition des employés par type de contrat</h3>
+      <ReactApexChart
+        options={chartData.options}
+        series={chartData.series}
+        type="bar"
+        height={350}
+      />
+    </div>
+  );
+};
+
+export default ApexBar2;
